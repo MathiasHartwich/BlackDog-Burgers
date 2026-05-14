@@ -6,6 +6,7 @@ export interface BurgerItem {
   description: string
   prices: { simple: number; doble: number; triple: number }
   image: string
+  mostOrdered?: boolean
 }
 
 export interface DrinkItem {

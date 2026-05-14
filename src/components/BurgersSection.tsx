@@ -9,10 +9,8 @@ interface BurgersSectionProps {
 export function BurgersSection({ onAddToCart }: BurgersSectionProps) {
   return (
     <section id="menu" className="relative grid-bg">
-      {/* fade top */}
+      {/* fade top only — bottom flows into InfoSection without interruption */}
       <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-black to-transparent pointer-events-none z-10" />
-      {/* fade bottom */}
-      <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-black to-transparent pointer-events-none z-10" />
       {/* fade left/right */}
       <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-black to-transparent pointer-events-none z-10" />
       <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-black to-transparent pointer-events-none z-10" />

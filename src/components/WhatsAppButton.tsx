@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 
-const WHATSAPP_NUMBER = "5491100000000" // Reemplazar con el número real
+const WHATSAPP_NUMBER = "598096550666"
 const WA_MESSAGE = encodeURIComponent("Hola! Quería consultar sobre BlackDog Burger 🍔")
 
 export function WhatsAppButton() {

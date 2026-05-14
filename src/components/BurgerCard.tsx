@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import type { BurgerItem, BurgerSize } from "@/types"
 
 const SIZES: BurgerSize[] = ["simple", "doble", "triple"]
+const TAKEAWAY_DISCOUNT = 0.10
 
 interface BurgerCardProps {
   burger: BurgerItem
@@ -14,6 +15,9 @@ interface BurgerCardProps {
 
 export function BurgerCard({ burger, onAdd, index }: BurgerCardProps) {
   const [selectedSize, setSelectedSize] = useState<BurgerSize>("doble")
+
+  const price = burger.prices[selectedSize]
+  const savings = Math.round(price * TAKEAWAY_DISCOUNT)
 
   return (
     <motion.div
@@ -30,6 +34,17 @@ export function BurgerCard({ burger, onAdd, index }: BurgerCardProps) {
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+
+        {burger.mostOrdered && (
+          <motion.span
+            animate={{ scale: [1, 1.03, 1] }}
+            transition={{ duration: 0.4, repeat: Infinity, repeatDelay: 4 }}
+            className="absolute top-3 left-3 z-10 bg-[#FFD24A] text-black text-[11px] font-black uppercase tracking-[0.08em] px-3 py-1.5"
+            style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.4)" }}
+          >
+            La más pedida
+          </motion.span>
+        )}
       </div>
 
       <div className="p-5 flex flex-col flex-1">
@@ -49,7 +64,7 @@ export function BurgerCard({ burger, onAdd, index }: BurgerCardProps) {
         </p>
 
         {/* Size selector */}
-        <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="grid grid-cols-3 gap-2 mb-3">
           {SIZES.map((size) => (
             <button
               key={size}
@@ -69,6 +84,12 @@ export function BurgerCard({ burger, onAdd, index }: BurgerCardProps) {
             </button>
           ))}
         </div>
+
+        {/* Take away savings badge */}
+        <p className="text-[10px] text-white/35 uppercase tracking-wider mb-4">
+          Take away: <span className="text-white/55 font-bold">${price - savings}</span>
+          <span className="ml-1.5 border border-white/15 text-white/40 px-1.5 py-0.5">−${savings}</span>
+        </p>
 
         <Button
           onClick={() => onAdd(burger, selectedSize)}

@@ -6,8 +6,9 @@ const GOOGLE_MAPS_URL = "https://maps.google.com" // Reemplazar con la URL real
 export function InfoSection() {
   return (
     <section className="relative grid-bg">
-      <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-black to-transparent pointer-events-none z-10" />
+      {/* fade bottom only — top flows from BurgersSection without interruption */}
       <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-black to-transparent pointer-events-none z-10" />
+      {/* fade left/right */}
       <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-black to-transparent pointer-events-none z-10" />
       <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-black to-transparent pointer-events-none z-10" />
 
@@ -76,6 +77,16 @@ export function InfoSection() {
               <p className="text-white/40 text-[11px] mt-3 border border-white/10 py-1.5 px-3 inline-block">
                 10% off con take away
               </p>
+              <div className="mt-5">
+                <a
+                  href="https://www.google.com/maps/d/u/0/edit?mid=1zQMrJ6B9sGxrl3JJ6IrHzovtiWdPf9c&usp=sharing"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block border border-white/20 text-white/70 hover:bg-white hover:text-black hover:border-white transition-all duration-200 text-xs font-bold tracking-widest uppercase px-6 py-3"
+                >
+                  Ver zona de envíos
+                </a>
+              </div>
             </motion.div>
 
             {/* Ubicación */}
