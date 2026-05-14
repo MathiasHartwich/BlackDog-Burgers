@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { drinks } from "@/data/burgers"
 import type { BurgerSize, CartItem, CartDrinkItem, DrinkItem, OrderData } from "@/types"
 
-const WHATSAPP_NUMBER = "5491100000000" // Reemplazar con el número real
+const WHATSAPP_NUMBER = "598096550666"
 const TAKEAWAY_DISCOUNT = 0.10
 
 const SIZE_LABEL: Record<string, string> = { simple: "Simple", doble: "Doble", triple: "Triple" }
@@ -29,14 +29,14 @@ function buildWhatsAppMessage(order: OrderData): string {
     : ""
 
   return encodeURIComponent(
-    `🐾 *Nuevo pedido BlackDog Burger*\n\n` +
-    `👤 ${order.customerName}\n` +
-    `📱 ${order.phone}\n` +
+    `• *Nuevo pedido BlackDog Burger*\n\n` +
+    `• ${order.customerName}\n` +
+    `• ${order.phone}\n` +
     `${delivery}\n\n` +
     `*Pedido:*\n${itemsList}${drinksList}\n` +
     `_(Todas incluyen papas fritas)_\n` +
     `${discountLine}\n` +
-    `💰 *Total: $${order.total}*\n\n` +
+    `• *Total: $${order.total}*\n\n` +
     (order.notes ? `📝 ${order.notes}` : "")
   )
 }
@@ -71,13 +71,34 @@ export function CartDrawer({
   const [step, setStep] = useState<"cart" | "checkout">("cart")
   const [deliveryMethod, setDeliveryMethod] = useState<"delivery" | "pickup">("delivery")
   const [form, setForm] = useState({ customerName: "", phone: "", address: "", notes: "" })
+  const [phoneError, setPhoneError] = useState("")
+  const [selectedDrinkId, setSelectedDrinkId] = useState(drinks[0]?.id ?? "")
+
+  const PHONE_REGEX = /^09\d[\s]?\d{3}[\s]?\d{3}$/
 
   const discount = deliveryMethod === "pickup" ? Math.round(total * TAKEAWAY_DISCOUNT) : 0
   const finalTotal = total - discount
   const isEmpty = items.length === 0 && cartDrinks.length === 0
 
+  const selectedDrink = drinks.find((d) => d.id === selectedDrinkId) ?? drinks[0]
+  const drinkInCart = cartDrinks.find((d) => d.drink.id === selectedDrinkId)
+  const anyDrinkInCart = cartDrinks.length > 0
+
+  const takeawaySavings = Math.round(total * TAKEAWAY_DISCOUNT)
+
+  const handlePhoneChange = (value: string) => {
+    setForm({ ...form, phone: value })
+    if (phoneError) setPhoneError("")
+  }
+
+  const handlePhoneBlur = (value: string) => {
+    if (value && !PHONE_REGEX.test(value)) {
+      setPhoneError("Formato inválido. Ej: 099 123 456")
+    }
+  }
+
   const handleSendOrder = () => {
-    if (!form.customerName || !form.phone) return
+    if (!form.customerName || !form.phone || phoneError) return
     if (deliveryMethod === "delivery" && !form.address) return
 
     const orderData: OrderData = {
@@ -179,39 +200,53 @@ export function CartDrawer({
                         </div>
                       )}
 
-                      {/* Drinks section */}
-                      <div>
-                        <p className="text-white/30 text-[10px] font-bold tracking-[0.25em] uppercase mb-3">Bebidas</p>
-                        <div className="space-y-2">
-                          {drinks.map((drink) => {
-                            const inCart = cartDrinks.find((d) => d.drink.id === drink.id)
-                            return (
-                              <div key={drink.id} className="flex items-center justify-between border border-white/8 px-4 py-3 bg-white/3">
-                                <div>
-                                  <p className="text-white/80 text-sm font-semibold">{drink.name}</p>
-                                  <p className="text-white/40 text-xs">${drink.price}</p>
-                                </div>
-                                {inCart ? (
-                                  <div className="flex items-center gap-2">
-                                    <button onClick={() => onUpdateDrinkQuantity(drink.id, inCart.quantity - 1)} className="text-white/50 hover:text-white w-6 h-6 border border-white/15 flex items-center justify-center">
-                                      <Minus size={12} />
-                                    </button>
-                                    <span className="text-white text-sm font-bold w-4 text-center">{inCart.quantity}</span>
-                                    <button onClick={() => onUpdateDrinkQuantity(drink.id, inCart.quantity + 1)} className="text-white/50 hover:text-white w-6 h-6 border border-white/15 flex items-center justify-center">
-                                      <Plus size={12} />
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <button
-                                    onClick={() => onAddDrink(drink)}
-                                    className="text-xs font-bold border border-white/20 text-white/60 hover:border-white hover:text-white px-3 py-1.5 transition-all"
-                                  >
-                                    + Agregar
-                                  </button>
-                                )}
-                              </div>
-                            )
-                          })}
+                      {/* Combo bebida card */}
+                      <div className="border border-white/10 bg-white/[0.03] p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-base">🥤</span>
+                          <div>
+                            <p className="text-white/80 text-xs font-black uppercase tracking-widest">Completá tu combo</p>
+                            <p className="text-white/40 text-[11px]">Sumá una Coca por solo ${selectedDrink?.price}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          {/* Selector Común / Zero */}
+                          <div className="flex border border-white/10 flex-1">
+                            {drinks.map((d) => (
+                              <button
+                                key={d.id}
+                                onClick={() => setSelectedDrinkId(d.id)}
+                                className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider transition-all ${
+                                  selectedDrinkId === d.id
+                                    ? "bg-white/10 text-white"
+                                    : "text-white/40 hover:text-white/60"
+                                }`}
+                              >
+                                {d.name.replace("Coca-Cola ", "")}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Botón agregar / agregada */}
+                          {drinkInCart ? (
+                            <div className="flex items-center gap-2 shrink-0">
+                              <button onClick={() => onUpdateDrinkQuantity(drinkInCart.drink.id, drinkInCart.quantity - 1)} className="text-white/50 hover:text-white w-6 h-6 border border-white/15 flex items-center justify-center">
+                                <Minus size={11} />
+                              </button>
+                              <span className="text-white text-sm font-bold w-4 text-center">{drinkInCart.quantity}</span>
+                              <button onClick={() => onUpdateDrinkQuantity(drinkInCart.drink.id, drinkInCart.quantity + 1)} className="text-white/50 hover:text-white w-6 h-6 border border-white/15 flex items-center justify-center">
+                                <Plus size={11} />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => selectedDrink && onAddDrink(selectedDrink)}
+                              className="shrink-0 text-xs font-black border border-white/20 text-white/70 hover:border-white hover:text-white px-3 py-2 transition-all uppercase tracking-wider"
+                            >
+                              {anyDrinkInCart ? "Cambiar" : "+ Agregar"}
+                            </button>
+                          )}
                         </div>
                       </div>
                     </>
@@ -253,10 +288,14 @@ export function CartDrawer({
                     <input
                       type="tel"
                       value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      placeholder="11 1234-5678"
-                      className="w-full bg-white/5 border border-white/10 px-4 py-3 text-white placeholder:text-white/25 focus:outline-none focus:border-white/30 transition-colors text-sm"
+                      onChange={(e) => handlePhoneChange(e.target.value)}
+                      onBlur={(e) => handlePhoneBlur(e.target.value)}
+                      placeholder="099 123 456"
+                      className={`w-full bg-white/5 border px-4 py-3 text-white placeholder:text-white/25 focus:outline-none transition-colors text-sm ${phoneError ? "border-red-500/60 focus:border-red-500/80" : "border-white/10 focus:border-white/30"}`}
                     />
+                    {phoneError && (
+                      <p className="mt-1.5 text-red-400/80 text-[11px]">{phoneError}</p>
+                    )}
                   </div>
 
                   <div>
@@ -272,18 +311,26 @@ export function CartDrawer({
                       </button>
                       <button
                         onClick={() => setDeliveryMethod("pickup")}
-                        className={`py-3.5 border text-sm font-bold uppercase tracking-wider transition-all ${
+                        className={`py-3 border text-sm font-bold uppercase tracking-wider transition-all flex flex-col items-center justify-center gap-0.5 ${
                           deliveryMethod === "pickup" ? "bg-white text-black border-white" : "border-white/15 text-white/50 hover:border-white/30"
                         }`}
                       >
-                        🏪 Take Away
+                        <span>🏪 Take Away</span>
+                        <span className={`text-[10px] tracking-wider font-black ${deliveryMethod === "pickup" ? "text-black/60" : "text-white/30"}`}>
+                          −${takeawaySavings}
+                        </span>
                       </button>
                     </div>
                     {deliveryMethod === "pickup" && (
-                      <div className="mt-2 flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-2.5">
+                      <motion.div
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="mt-2 flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-2.5"
+                      >
                         <Tag size={13} className="text-white/60" />
-                        <span className="text-white/70 text-xs font-semibold">10% de descuento aplicado</span>
-                      </div>
+                        <span className="text-white/70 text-xs font-semibold">Ahorrás ${takeawaySavings} con take away</span>
+                      </motion.div>
                     )}
                   </div>
 
@@ -327,10 +374,15 @@ export function CartDrawer({
                       </div>
                     ))}
                     {discount > 0 && (
-                      <div className="flex justify-between text-sm text-green-400 border-t border-white/10 pt-2">
-                        <span>Descuento take away (-10%)</span>
-                        <span>-${discount}</span>
-                      </div>
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                        className="flex justify-between text-sm text-green-400 border-t border-white/10 pt-2"
+                      >
+                        <span>Ahorrás con take away</span>
+                        <span>−${discount}</span>
+                      </motion.div>
                     )}
                     <div className="flex justify-between font-black border-t border-white/10 pt-2">
                       <span className="text-white">Total</span>
@@ -342,7 +394,7 @@ export function CartDrawer({
                 <div className="p-6 border-t border-white/10 space-y-3">
                   <Button
                     onClick={handleSendOrder}
-                    disabled={!form.customerName || !form.phone || (deliveryMethod === "delivery" && !form.address)}
+                    disabled={!form.customerName || !form.phone || !!phoneError || (deliveryMethod === "delivery" && !form.address)}
                     className="w-full bg-[#25D366] hover:bg-[#1ebe59] text-white gap-2 font-black tracking-wide disabled:opacity-40"
                     size="lg"
                   >
