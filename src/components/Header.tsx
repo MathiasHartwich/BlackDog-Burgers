@@ -23,7 +23,7 @@ export function Header({ cartCount, onOpenCart }: HeaderProps) {
     <header>
       <nav
         data-state={menuOpen ? "active" : undefined}
-        className="group fixed z-20 w-full pt-2"
+        className="group fixed z-30 w-full pt-2"
       >
         <div
           className={cn(
@@ -39,9 +39,12 @@ export function Header({ cartCount, onOpenCart }: HeaderProps) {
           >
             <div className="flex w-full items-center justify-between gap-12 lg:w-auto">
               <a href="/" className="flex items-center">
-                <span className="text-xl font-black tracking-[0.1em] text-white uppercase">
-                  BlackDog Burger
-                </span>
+                <img
+                  src="/logo-v1.png"
+                  alt="BlackDog Burger"
+                  className="h-11 w-auto object-contain"
+                  style={{ filter: "invert(1)" }}
+                />
               </a>
 
               <button
@@ -99,7 +102,7 @@ export function Header({ cartCount, onOpenCart }: HeaderProps) {
                   onClick={onOpenCart}
                   className="border border-white/30 text-white/80 hover:bg-white hover:text-black hover:border-white text-xs font-black uppercase tracking-widest px-5 py-2.5 transition-all duration-200"
                 >
-                  Hacer Pedido
+                  Empezar Pedido
                 </button>
               </div>
             </div>
