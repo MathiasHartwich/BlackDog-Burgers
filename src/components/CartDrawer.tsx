@@ -65,7 +65,7 @@ export function CartDrawer({
   onRemoveItem,
   onAddDrink,
   onUpdateDrinkQuantity,
-  onRemoveDrink,
+  onRemoveDrink: _onRemoveDrink,
   onClearCart,
 }: CartDrawerProps) {
   const [step, setStep] = useState<"cart" | "checkout">("cart")
