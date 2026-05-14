@@ -32,18 +32,14 @@ export function WhoWeAre() {
               </p>
             </div>
 
-            <div className="mt-10 grid grid-cols-3 gap-6 border-t border-white/10 pt-8">
+            <div className="mt-10 grid grid-cols-2 gap-6 border-t border-white/10 pt-8">
               <div>
                 <div className="text-3xl font-black text-white mb-1">100%</div>
                 <div className="text-white/40 text-xs uppercase tracking-widest">Carne Fresca</div>
               </div>
               <div>
-                <div className="text-3xl font-black text-white mb-1">5★</div>
-                <div className="text-white/40 text-xs uppercase tracking-widest">Calificación</div>
-              </div>
-              <div>
-                <div className="text-3xl font-black text-white mb-1">2019</div>
-                <div className="text-white/40 text-xs uppercase tracking-widest">Fundados</div>
+                <div className="text-3xl font-black text-white mb-1">0</div>
+                <div className="text-white/40 text-xs uppercase tracking-widest">Congelados</div>
               </div>
             </div>
           </motion.div>
@@ -56,7 +52,7 @@ export function WhoWeAre() {
             className="relative h-[480px] overflow-hidden"
           >
             <img
-              src="https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=800&q=80"
+              src="/blackdog_lesszoom.jpeg"
               alt="BlackDog Burger"
               className="w-full h-full object-cover"
             />
