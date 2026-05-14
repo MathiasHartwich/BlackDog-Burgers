@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Instagram } from "lucide-react"
+import { Analytics } from "@vercel/analytics/react"
 import { StickyBar } from "@/components/StickyBar"
 import { Header } from "@/components/Header"
 import { Hero } from "@/components/Hero"
@@ -94,6 +95,7 @@ export default function App() {
       />
 
       <WhatsAppButton />
+      <Analytics />
     </div>
   )
 }
