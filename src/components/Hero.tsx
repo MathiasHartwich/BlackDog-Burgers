@@ -11,7 +11,7 @@ export function Hero({ onOrderClick, onMenuClick }: HeroProps) {
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 z-0">
         <img
-          src="https://images.unsplash.com/photo-1550547660-d9450f859349?w=1920&q=80"
+          src="/banner.jpeg"
           alt="BlackDog Burger"
           className="w-full h-full object-cover opacity-35"
         />
@@ -34,27 +34,18 @@ export function Hero({ onOrderClick, onMenuClick }: HeroProps) {
           initial={{ opacity: 0, y: 25 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.1 }}
-          className="text-6xl md:text-8xl lg:text-9xl font-black mb-4 tracking-tight text-white leading-none"
+          className="text-5xl md:text-7xl lg:text-8xl font-black mb-4 tracking-tight text-white leading-none"
         >
-          SMASH
+          BLACK DOG
           <br />
           <span className="text-white/90">BURGERS</span>
         </motion.h1>
-
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.25 }}
-          className="text-lg md:text-xl text-white/60 mb-14 max-w-xl mx-auto font-light tracking-wide"
-        >
-          Aplastadas a la perfección. Cada mordida cuenta una historia.
-        </motion.p>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+          className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-10"
         >
           {/* Primary CTA — pulsing ring + bold */}
           <div className="relative">
@@ -64,14 +55,14 @@ export function Hero({ onOrderClick, onMenuClick }: HeroProps) {
               className="relative flex items-center gap-3 bg-white text-black px-10 py-4 text-base font-black uppercase tracking-widest hover:bg-white/90 active:scale-95 transition-all duration-150 shadow-[0_0_40px_rgba(255,255,255,0.25)]"
             >
               <ShoppingBag size={18} />
-              Pedir Ahora
+              Empezar Pedido
             </button>
           </div>
 
           {/* Secondary CTA */}
           <button
             onClick={onMenuClick}
-            className="flex items-center gap-2 border border-white/40 text-white/80 px-10 py-4 text-base font-bold uppercase tracking-widest hover:bg-white hover:text-black hover:border-white active:scale-95 transition-all duration-200"
+            className="flex items-center gap-2 border border-white/20 text-white/50 px-10 py-4 text-base font-bold uppercase tracking-widest hover:border-white/40 hover:text-white/70 active:scale-95 transition-all duration-200"
           >
             <ArrowDown size={16} />
             Ver Menú
