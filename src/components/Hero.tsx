@@ -1,12 +1,11 @@
 import { motion } from "framer-motion"
-import { ArrowDown, ShoppingBag } from "lucide-react"
+import { ArrowDown } from "lucide-react"
 
 interface HeroProps {
-  onOrderClick: () => void
   onMenuClick: () => void
 }
 
-export function Hero({ onOrderClick, onMenuClick }: HeroProps) {
+export function Hero({ onMenuClick }: HeroProps) {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 z-0">
@@ -45,28 +44,18 @@ export function Hero({ onOrderClick, onMenuClick }: HeroProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-10"
+          className="flex justify-center items-center mt-10"
         >
-          {/* Primary CTA — pulsing ring + bold */}
           <div className="relative">
             <span className="absolute inset-0 rounded-none animate-ping bg-white/20 duration-1000" />
             <button
-              onClick={onOrderClick}
+              onClick={onMenuClick}
               className="relative flex items-center gap-3 bg-white text-black px-10 py-4 text-base font-black uppercase tracking-widest hover:bg-white/90 active:scale-95 transition-all duration-150 shadow-[0_0_40px_rgba(255,255,255,0.25)]"
             >
-              <ShoppingBag size={18} />
-              Empezar Pedido
+              <ArrowDown size={18} />
+              Ver Menú
             </button>
           </div>
-
-          {/* Secondary CTA */}
-          <button
-            onClick={onMenuClick}
-            className="flex items-center gap-2 border border-white/20 text-white/50 px-10 py-4 text-base font-bold uppercase tracking-widest hover:border-white/40 hover:text-white/70 active:scale-95 transition-all duration-200"
-          >
-            <ArrowDown size={16} />
-            Ver Menú
-          </button>
         </motion.div>
 
         <motion.p
