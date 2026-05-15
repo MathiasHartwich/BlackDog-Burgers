@@ -37,7 +37,6 @@ export default function App() {
       <Header cartCount={itemCount} onOpenCart={() => setCartOpen(true)} />
 
       <Hero
-        onOrderClick={() => setCartOpen(true)}
         onMenuClick={scrollToMenu}
       />
 
