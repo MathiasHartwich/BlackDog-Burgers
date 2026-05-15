@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Minus, Plus, Trash2, MessageCircle, Tag } from "lucide-react"
+import { X, Minus, Plus, Trash2, MessageCircle, Tag, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { drinks } from "@/data/burgers"
 import type { BurgerSize, CartItem, CartDrinkItem, DrinkItem, OrderData } from "@/types"
@@ -55,6 +55,8 @@ interface CartDrawerProps {
   onClearCart: () => void
 }
 
+type ComboState = "pending" | "added" | "declined"
+
 export function CartDrawer({
   open,
   onClose,
@@ -64,7 +66,7 @@ export function CartDrawer({
   onUpdateQuantity,
   onRemoveItem,
   onAddDrink,
-  onUpdateDrinkQuantity,
+  onUpdateDrinkQuantity: _onUpdateDrinkQuantity,
   onRemoveDrink: _onRemoveDrink,
   onClearCart,
 }: CartDrawerProps) {
@@ -72,17 +74,14 @@ export function CartDrawer({
   const [deliveryMethod, setDeliveryMethod] = useState<"delivery" | "pickup">("delivery")
   const [form, setForm] = useState({ customerName: "", phone: "", address: "", notes: "" })
   const [phoneError, setPhoneError] = useState("")
-  const [selectedDrinkId, setSelectedDrinkId] = useState(drinks[0]?.id ?? "")
+  const [burgerCombos, setBurgerCombos] = useState<Record<string, ComboState>>({})
+  const [comboSelectedDrinks, setComboSelectedDrinks] = useState<Record<string, string>>({})
 
   const PHONE_REGEX = /^09\d[\s]?\d{3}[\s]?\d{3}$/
 
   const discount = deliveryMethod === "pickup" ? Math.round(total * TAKEAWAY_DISCOUNT) : 0
   const finalTotal = total - discount
   const isEmpty = items.length === 0 && cartDrinks.length === 0
-
-  const selectedDrink = drinks.find((d) => d.id === selectedDrinkId) ?? drinks[0]
-  const drinkInCart = cartDrinks.find((d) => d.drink.id === selectedDrinkId)
-  const anyDrinkInCart = cartDrinks.length > 0
 
   const takeawaySavings = Math.round(total * TAKEAWAY_DISCOUNT)
 
@@ -166,89 +165,107 @@ export function CartDrawer({
                     </div>
                   ) : (
                     <>
-                      {/* Burger items */}
                       {items.length > 0 && (
                         <div className="space-y-3">
-                          {items.map((item) => (
-                            <div key={`${item.burger.id}-${item.size}`} className="flex gap-3 border border-white/8 p-4 bg-white/3">
-                              <img
-                                src={item.burger.image}
-                                alt={item.burger.name}
-                                className="w-14 h-14 object-cover shrink-0"
-                              />
-                              <div className="flex-1 min-w-0">
-                                <p className="font-black text-white text-sm">{item.burger.name}</p>
-                                <p className="text-white/40 text-xs uppercase tracking-wider">{SIZE_LABEL[item.size]}</p>
-                                <div className="flex items-center gap-2 mt-2">
-                                  <button onClick={() => onUpdateQuantity(item.burger.id, item.size, item.quantity - 1)} className="text-white/50 hover:text-white w-6 h-6 border border-white/15 flex items-center justify-center transition-colors">
-                                    <Minus size={12} />
-                                  </button>
-                                  <span className="text-white text-sm font-bold w-4 text-center">{item.quantity}</span>
-                                  <button onClick={() => onUpdateQuantity(item.burger.id, item.size, item.quantity + 1)} className="text-white/50 hover:text-white w-6 h-6 border border-white/15 flex items-center justify-center transition-colors">
-                                    <Plus size={12} />
-                                  </button>
+                          {items.map((item) => {
+                            const key = `${item.burger.id}-${item.size}`
+                            const comboState = burgerCombos[key] ?? "pending"
+                            const selectedDrinkId = comboSelectedDrinks[key] ?? drinks[0]?.id ?? ""
+                            const comboDrink = drinks.find((d) => d.id === selectedDrinkId) ?? drinks[0]
+
+                            return (
+                              <div key={key}>
+                                {/* Burger card */}
+                                <div className="flex gap-3 border border-white/8 p-4 bg-white/3">
+                                  <img
+                                    src={item.burger.image}
+                                    alt={item.burger.name}
+                                    className="w-14 h-14 object-cover shrink-0"
+                                  />
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-black text-white text-sm">{item.burger.name}</p>
+                                    <p className="text-white/40 text-xs uppercase tracking-wider">{SIZE_LABEL[item.size]}</p>
+                                    <div className="flex items-center gap-2 mt-2">
+                                      <button onClick={() => onUpdateQuantity(item.burger.id, item.size, item.quantity - 1)} className="text-white/50 hover:text-white w-6 h-6 border border-white/15 flex items-center justify-center transition-colors">
+                                        <Minus size={12} />
+                                      </button>
+                                      <span className="text-white text-sm font-bold w-4 text-center">{item.quantity}</span>
+                                      <button onClick={() => onUpdateQuantity(item.burger.id, item.size, item.quantity + 1)} className="text-white/50 hover:text-white w-6 h-6 border border-white/15 flex items-center justify-center transition-colors">
+                                        <Plus size={12} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                  <div className="flex flex-col items-end justify-between">
+                                    <button onClick={() => onRemoveItem(item.burger.id, item.size)} className="text-white/20 hover:text-red-400 transition-colors">
+                                      <Trash2 size={14} />
+                                    </button>
+                                    <span className="text-white font-black text-sm">${item.burger.prices[item.size] * item.quantity}</span>
+                                  </div>
                                 </div>
+
+                                {/* Combo — pending */}
+                                {comboState === "pending" && (
+                                  <div className="border border-t-0 border-white/8 bg-white/[0.02] p-3">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <span className="text-sm">🥤</span>
+                                      <p className="text-white/70 text-[11px] font-black uppercase tracking-widest">Completá tu combo</p>
+                                      <p className="text-white/40 text-[10px]">+${comboDrink?.price}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <div className="flex border border-white/10 flex-1">
+                                        {drinks.map((d) => (
+                                          <button
+                                            key={d.id}
+                                            onClick={() => setComboSelectedDrinks((prev) => ({ ...prev, [key]: d.id }))}
+                                            className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
+                                              selectedDrinkId === d.id
+                                                ? "bg-white/10 text-white"
+                                                : "text-white/40 hover:text-white/60"
+                                            }`}
+                                          >
+                                            {d.name.replace("Coca-Cola ", "")}
+                                          </button>
+                                        ))}
+                                      </div>
+                                      <button
+                                        onClick={() => {
+                                          if (comboDrink) {
+                                            onAddDrink(comboDrink)
+                                            setBurgerCombos((prev) => ({ ...prev, [key]: "added" }))
+                                          }
+                                        }}
+                                        className="shrink-0 text-[10px] font-black border border-white/20 text-white/70 hover:border-white hover:text-white px-3 py-1.5 transition-all uppercase tracking-wider"
+                                      >
+                                        + Agregar
+                                      </button>
+                                      <button
+                                        onClick={() => setBurgerCombos((prev) => ({ ...prev, [key]: "declined" }))}
+                                        className="shrink-0 text-[10px] text-white/25 hover:text-white/40 transition-colors"
+                                      >
+                                        No gracias
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Combo — agregado */}
+                                {comboState === "added" && (
+                                  <motion.div
+                                    initial={{ opacity: 0, y: -4 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.25 }}
+                                    className="border border-t-0 border-green-500/30 bg-green-500/5 px-4 py-2 flex items-center gap-2"
+                                  >
+                                    <Check size={11} className="text-green-400 shrink-0" />
+                                    <span className="text-green-400 text-[11px] font-black uppercase tracking-wider">Agregado</span>
+                                    <span className="text-white/40 text-[11px]">— {comboDrink?.name}</span>
+                                  </motion.div>
+                                )}
                               </div>
-                              <div className="flex flex-col items-end justify-between">
-                                <button onClick={() => onRemoveItem(item.burger.id, item.size)} className="text-white/20 hover:text-red-400 transition-colors">
-                                  <Trash2 size={14} />
-                                </button>
-                                <span className="text-white font-black text-sm">${item.burger.prices[item.size] * item.quantity}</span>
-                              </div>
-                            </div>
-                          ))}
+                            )
+                          })}
                         </div>
                       )}
-
-                      {/* Combo bebida card */}
-                      <div className="border border-white/10 bg-white/[0.03] p-4">
-                        <div className="flex items-center gap-2 mb-3">
-                          <span className="text-base">🥤</span>
-                          <div>
-                            <p className="text-white/80 text-xs font-black uppercase tracking-widest">Completá tu combo</p>
-                            <p className="text-white/40 text-[11px]">Sumá una Coca por solo ${selectedDrink?.price}</p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                          {/* Selector Común / Zero */}
-                          <div className="flex border border-white/10 flex-1">
-                            {drinks.map((d) => (
-                              <button
-                                key={d.id}
-                                onClick={() => setSelectedDrinkId(d.id)}
-                                className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider transition-all ${
-                                  selectedDrinkId === d.id
-                                    ? "bg-white/10 text-white"
-                                    : "text-white/40 hover:text-white/60"
-                                }`}
-                              >
-                                {d.name.replace("Coca-Cola ", "")}
-                              </button>
-                            ))}
-                          </div>
-
-                          {/* Botón agregar / agregada */}
-                          {drinkInCart ? (
-                            <div className="flex items-center gap-2 shrink-0">
-                              <button onClick={() => onUpdateDrinkQuantity(drinkInCart.drink.id, drinkInCart.quantity - 1)} className="text-white/50 hover:text-white w-6 h-6 border border-white/15 flex items-center justify-center">
-                                <Minus size={11} />
-                              </button>
-                              <span className="text-white text-sm font-bold w-4 text-center">{drinkInCart.quantity}</span>
-                              <button onClick={() => onUpdateDrinkQuantity(drinkInCart.drink.id, drinkInCart.quantity + 1)} className="text-white/50 hover:text-white w-6 h-6 border border-white/15 flex items-center justify-center">
-                                <Plus size={11} />
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => selectedDrink && onAddDrink(selectedDrink)}
-                              className="shrink-0 text-xs font-black border border-white/20 text-white/70 hover:border-white hover:text-white px-3 py-2 transition-all uppercase tracking-wider"
-                            >
-                              {anyDrinkInCart ? "Cambiar" : "+ Agregar"}
-                            </button>
-                          )}
-                        </div>
-                      </div>
                     </>
                   )}
                 </div>
