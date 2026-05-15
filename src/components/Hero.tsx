@@ -2,11 +2,10 @@ import { motion } from "framer-motion"
 import { ArrowDown } from "lucide-react"
 
 interface HeroProps {
-  onOrderClick: () => void
   onMenuClick: () => void
 }
 
-export function Hero({ onOrderClick, onMenuClick }: HeroProps) {
+export function Hero({ onMenuClick }: HeroProps) {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 z-0">
