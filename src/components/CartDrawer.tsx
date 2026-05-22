@@ -55,8 +55,6 @@ interface CartDrawerProps {
   onClearCart: () => void
 }
 
-type ComboState = "pending" | "added" | "declined"
-
 export function CartDrawer({
   open,
   onClose,
@@ -74,7 +72,8 @@ export function CartDrawer({
   const [deliveryMethod, setDeliveryMethod] = useState<"delivery" | "pickup">("delivery")
   const [form, setForm] = useState({ customerName: "", phone: "", address: "", notes: "" })
   const [phoneError, setPhoneError] = useState("")
-  const [burgerCombos, setBurgerCombos] = useState<Record<string, ComboState>>({})
+  const [combosAdded, setCombosAdded] = useState<Record<string, number>>({})
+  const [comboDismissedAt, setComboDismissedAt] = useState<Record<string, number>>({})
   const [comboSelectedDrinks, setComboSelectedDrinks] = useState<Record<string, string>>({})
 
   const PHONE_REGEX = /^09\d[\s]?\d{3}[\s]?\d{3}$/
@@ -169,9 +168,11 @@ export function CartDrawer({
                         <div className="space-y-3">
                           {items.map((item) => {
                             const key = `${item.burger.id}-${item.size}`
-                            const comboState = burgerCombos[key] ?? "pending"
+                            const addedCount = combosAdded[key] ?? 0
+                            const dismissedAt = comboDismissedAt[key] ?? -1
                             const selectedDrinkId = comboSelectedDrinks[key] ?? drinks[0]?.id ?? ""
                             const comboDrink = drinks.find((d) => d.id === selectedDrinkId) ?? drinks[0]
+                            const showComboPrompt = addedCount < item.quantity && dismissedAt !== item.quantity
 
                             return (
                               <div key={key}>
@@ -203,8 +204,24 @@ export function CartDrawer({
                                   </div>
                                 </div>
 
+                                {/* Combo — agregado */}
+                                {addedCount > 0 && (
+                                  <motion.div
+                                    initial={{ opacity: 0, y: -4 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.25 }}
+                                    className="border border-t-0 border-green-500/30 bg-green-500/5 px-4 py-2 flex items-center gap-2"
+                                  >
+                                    <Check size={11} className="text-green-400 shrink-0" />
+                                    <span className="text-green-400 text-[11px] font-black uppercase tracking-wider">
+                                      {addedCount > 1 ? `Agregados ×${addedCount}` : "Agregado"}
+                                    </span>
+                                    <span className="text-white/40 text-[11px]">— {comboDrink?.name}</span>
+                                  </motion.div>
+                                )}
+
                                 {/* Combo — pending */}
-                                {comboState === "pending" && (
+                                {showComboPrompt && (
                                   <div className="border border-t-0 border-white/8 bg-white/[0.02] p-3">
                                     <div className="flex items-center gap-2 mb-2">
                                       <span className="text-sm">🥤</span>
@@ -231,7 +248,7 @@ export function CartDrawer({
                                         onClick={() => {
                                           if (comboDrink) {
                                             onAddDrink(comboDrink)
-                                            setBurgerCombos((prev) => ({ ...prev, [key]: "added" }))
+                                            setCombosAdded((prev) => ({ ...prev, [key]: (prev[key] ?? 0) + 1 }))
                                           }
                                         }}
                                         className="shrink-0 text-[10px] font-black border border-white/20 text-white/70 hover:border-white hover:text-white px-3 py-1.5 transition-all uppercase tracking-wider"
@@ -239,27 +256,13 @@ export function CartDrawer({
                                         + Agregar
                                       </button>
                                       <button
-                                        onClick={() => setBurgerCombos((prev) => ({ ...prev, [key]: "declined" }))}
+                                        onClick={() => setComboDismissedAt((prev) => ({ ...prev, [key]: item.quantity }))}
                                         className="shrink-0 text-[10px] text-white/25 hover:text-white/40 transition-colors"
                                       >
                                         No gracias
                                       </button>
                                     </div>
                                   </div>
-                                )}
-
-                                {/* Combo — agregado */}
-                                {comboState === "added" && (
-                                  <motion.div
-                                    initial={{ opacity: 0, y: -4 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.25 }}
-                                    className="border border-t-0 border-green-500/30 bg-green-500/5 px-4 py-2 flex items-center gap-2"
-                                  >
-                                    <Check size={11} className="text-green-400 shrink-0" />
-                                    <span className="text-green-400 text-[11px] font-black uppercase tracking-wider">Agregado</span>
-                                    <span className="text-white/40 text-[11px]">— {comboDrink?.name}</span>
-                                  </motion.div>
                                 )}
                               </div>
                             )
