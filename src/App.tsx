@@ -17,12 +17,16 @@ export default function App() {
   const {
     items,
     drinks,
+    extras,
     addItem,
     removeItem,
     updateQuantity,
     addDrink,
     removeDrink,
     updateDrinkQuantity,
+    addExtra,
+    removeExtra,
+    updateExtraQuantity,
     clearCart,
     total,
     itemCount,
@@ -84,12 +88,16 @@ export default function App() {
         onClose={() => setCartOpen(false)}
         items={items}
         drinks={drinks}
+        extras={extras}
         total={total}
         onUpdateQuantity={updateQuantity}
         onRemoveItem={removeItem}
         onAddDrink={addDrink}
         onUpdateDrinkQuantity={updateDrinkQuantity}
         onRemoveDrink={removeDrink}
+        onAddExtra={addExtra}
+        onUpdateExtraQuantity={updateExtraQuantity}
+        onRemoveExtra={removeExtra}
         onClearCart={clearCart}
       />
 

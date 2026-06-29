@@ -1,9 +1,10 @@
 import { useState, useCallback } from "react"
-import type { BurgerItem, BurgerSize, CartItem, CartDrinkItem, DrinkItem } from "@/types"
+import type { BurgerItem, BurgerSize, CartItem, CartDrinkItem, DrinkItem, ExtraItem, CartExtraItem } from "@/types"
 
 export function useCart() {
   const [items, setItems] = useState<CartItem[]>([])
   const [drinks, setDrinks] = useState<CartDrinkItem[]>([])
+  const [extras, setExtras] = useState<CartExtraItem[]>([])
 
   const addItem = useCallback((burger: BurgerItem, size: BurgerSize) => {
     setItems((prev) => {
@@ -58,26 +59,59 @@ export function useCart() {
     )
   }, [])
 
+  const addExtra = useCallback((newExtra: ExtraItem) => {
+    setExtras((prev) => {
+      const existing = prev.find((e) => e.extra.id === newExtra.id)
+      if (existing) {
+        return prev.map((e) => e.extra.id === newExtra.id ? { ...e, quantity: e.quantity + 1 } : e)
+      }
+      return [...prev, { extra: newExtra, quantity: 1 }]
+    })
+  }, [])
+
+  const removeExtra = useCallback((extraId: string) => {
+    setExtras((prev) => prev.filter((e) => e.extra.id !== extraId))
+  }, [])
+
+  const updateExtraQuantity = useCallback((extraId: string, quantity: number) => {
+    if (quantity <= 0) {
+      setExtras((prev) => prev.filter((e) => e.extra.id !== extraId))
+      return
+    }
+    setExtras((prev) =>
+      prev.map((e) => e.extra.id === extraId ? { ...e, quantity } : e)
+    )
+  }, [])
+
   const clearCart = useCallback(() => {
     setItems([])
     setDrinks([])
+    setExtras([])
   }, [])
 
-  const burgerTotal = items.reduce((sum, i) => sum + i.burger.prices[i.size] * i.quantity, 0)
+  const burgerTotal = items.reduce((sum, i) => sum + (i.burger.prices[i.size] ?? 0) * i.quantity, 0)
   const drinkTotal = drinks.reduce((sum, d) => sum + d.drink.price * d.quantity, 0)
-  const total = burgerTotal + drinkTotal
+  const extraTotal = extras.reduce((sum, e) => sum + e.extra.price * e.quantity, 0)
+  const total = burgerTotal + drinkTotal + extraTotal
 
-  const itemCount = items.reduce((sum, i) => sum + i.quantity, 0) + drinks.reduce((sum, d) => sum + d.quantity, 0)
+  const itemCount =
+    items.reduce((sum, i) => sum + i.quantity, 0) +
+    drinks.reduce((sum, d) => sum + d.quantity, 0) +
+    extras.reduce((sum, e) => sum + e.quantity, 0)
 
   return {
     items,
     drinks,
+    extras,
     addItem,
     removeItem,
     updateQuantity,
     addDrink,
     removeDrink,
     updateDrinkQuantity,
+    addExtra,
+    removeExtra,
+    updateExtraQuantity,
     clearCart,
     total,
     itemCount,

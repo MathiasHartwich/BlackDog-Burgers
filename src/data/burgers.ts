@@ -1,6 +1,14 @@
-import type { BurgerItem, DrinkItem } from "@/types"
+import type { BurgerItem, DrinkItem, ExtraItem } from "@/types"
 
 export const burgers: BurgerItem[] = [
+  {
+    id: "egg-mash",
+    name: "EGG-MASH",
+    description: "Ali-Oli · Bondiola · Doble queso emmental por carne · Huevo a la plancha",
+    prices: { simple: 449, doble: 549 },
+    image: "/eggmash.jpeg",
+    isNew: true,
+  },
   {
     id: "cheese",
     name: "CHEESE",
@@ -26,6 +34,10 @@ export const burgers: BurgerItem[] = [
 ]
 
 export const drinks: DrinkItem[] = [
-  { id: "coca-cola-comun", name: "Coca-Cola Común", price: 79 },
-  { id: "coca-cola-zero", name: "Coca-Cola Zero", price: 79 },
+  { id: "coca-cola-comun", name: "Coca-Cola Común 600ml", price: 89 },
+  { id: "coca-cola-zero", name: "Coca-Cola Zero 600ml", price: 89 },
+]
+
+export const extras: ExtraItem[] = [
+  { id: "papas-extra", name: "Porción de papas extra", price: 99 },
 ]
