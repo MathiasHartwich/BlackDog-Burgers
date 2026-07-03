@@ -4,7 +4,7 @@ import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { BurgerItem, BurgerSize } from "@/types"
 
-const SIZES: BurgerSize[] = ["simple", "doble", "triple"]
+const ALL_SIZES: BurgerSize[] = ["simple", "doble", "triple"]
 const TAKEAWAY_DISCOUNT = 0.10
 
 interface BurgerCardProps {
@@ -14,9 +14,10 @@ interface BurgerCardProps {
 }
 
 export function BurgerCard({ burger, onAdd, index }: BurgerCardProps) {
+  const availableSizes = ALL_SIZES.filter((s) => burger.prices[s] != null)
   const [selectedSize, setSelectedSize] = useState<BurgerSize>("doble")
 
-  const price = burger.prices[selectedSize]
+  const price: number = burger.prices[selectedSize] ?? 0
   const savings = Math.round(price * TAKEAWAY_DISCOUNT)
 
   return (
@@ -45,6 +46,17 @@ export function BurgerCard({ burger, onAdd, index }: BurgerCardProps) {
             La más pedida
           </motion.span>
         )}
+
+        {burger.isNew && (
+          <motion.span
+            animate={{ scale: [1, 1.03, 1] }}
+            transition={{ duration: 0.4, repeat: Infinity, repeatDelay: 4 }}
+            className="absolute top-3 left-3 z-10 bg-[#22C55E] text-white text-[11px] font-black uppercase tracking-[0.08em] px-3 py-1.5"
+            style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.4)" }}
+          >
+            Nueva
+          </motion.span>
+        )}
       </div>
 
       <div className="p-5 flex flex-col flex-1">
@@ -64,8 +76,11 @@ export function BurgerCard({ burger, onAdd, index }: BurgerCardProps) {
         </p>
 
         {/* Size selector */}
-        <div className="grid grid-cols-3 gap-2 mb-3">
-          {SIZES.map((size) => (
+        <div
+          className="gap-2 mb-3"
+          style={{ display: "grid", gridTemplateColumns: `repeat(${availableSizes.length}, minmax(0, 1fr))` }}
+        >
+          {availableSizes.map((size) => (
             <button
               key={size}
               onClick={() => setSelectedSize(size)}

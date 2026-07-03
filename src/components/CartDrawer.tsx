@@ -2,8 +2,12 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Minus, Plus, Trash2, MessageCircle, Tag, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { drinks } from "@/data/burgers"
-import type { BurgerSize, CartItem, CartDrinkItem, DrinkItem, OrderData } from "@/types"
+import { drinks, extras as extrasData } from "@/data/burgers"
+import type { BurgerItem, BurgerSize, CartItem, CartDrinkItem, CartExtraItem, DrinkItem, ExtraItem, OrderData } from "@/types"
+
+function getPrice(burger: BurgerItem, size: BurgerSize): number {
+  return burger.prices[size] ?? 0
+}
 
 const WHATSAPP_NUMBER = "598096550666"
 const TAKEAWAY_DISCOUNT = 0.10
@@ -12,11 +16,15 @@ const SIZE_LABEL: Record<string, string> = { simple: "Simple", doble: "Doble", t
 
 function buildWhatsAppMessage(order: OrderData): string {
   const itemsList = order.items
-    .map((i) => `  • ${i.quantity}x ${i.burger.name} ${SIZE_LABEL[i.size]} - $${(i.burger.prices[i.size] * i.quantity)}`)
+    .map((i) => `  • ${i.quantity}x ${i.burger.name} ${SIZE_LABEL[i.size]} - $${getPrice(i.burger, i.size) * i.quantity}`)
     .join("\n")
 
   const drinksList = order.drinks.length
     ? "\n" + order.drinks.map((d) => `  • ${d.quantity}x ${d.drink.name} - $${d.drink.price * d.quantity}`).join("\n")
+    : ""
+
+  const extrasList = order.extras.length
+    ? "\n" + order.extras.map((e) => `  • ${e.quantity}x ${e.extra.name} - $${e.extra.price * e.quantity}`).join("\n")
     : ""
 
   const delivery =
@@ -33,7 +41,7 @@ function buildWhatsAppMessage(order: OrderData): string {
     `• ${order.customerName}\n` +
     `• ${order.phone}\n` +
     `${delivery}\n\n` +
-    `*Pedido:*\n${itemsList}${drinksList}\n` +
+    `*Pedido:*\n${itemsList}${drinksList}${extrasList}\n` +
     `_(Todas incluyen papas fritas)_\n` +
     `${discountLine}\n` +
     `• *Total: $${order.total}*\n\n` +
@@ -46,12 +54,16 @@ interface CartDrawerProps {
   onClose: () => void
   items: CartItem[]
   drinks: CartDrinkItem[]
+  extras: CartExtraItem[]
   total: number
   onUpdateQuantity: (burgerId: string, size: BurgerSize, quantity: number) => void
   onRemoveItem: (burgerId: string, size: BurgerSize) => void
   onAddDrink: (drink: DrinkItem) => void
   onUpdateDrinkQuantity: (drinkId: string, quantity: number) => void
   onRemoveDrink: (drinkId: string) => void
+  onAddExtra: (extra: ExtraItem) => void
+  onUpdateExtraQuantity: (extraId: string, quantity: number) => void
+  onRemoveExtra: (extraId: string) => void
   onClearCart: () => void
 }
 
@@ -60,12 +72,16 @@ export function CartDrawer({
   onClose,
   items,
   drinks: cartDrinks,
+  extras: cartExtras,
   total,
   onUpdateQuantity,
   onRemoveItem,
   onAddDrink,
   onUpdateDrinkQuantity: _onUpdateDrinkQuantity,
   onRemoveDrink: _onRemoveDrink,
+  onAddExtra,
+  onUpdateExtraQuantity: _onUpdateExtraQuantity,
+  onRemoveExtra: _onRemoveExtra,
   onClearCart,
 }: CartDrawerProps) {
   const [step, setStep] = useState<"cart" | "checkout">("cart")
@@ -75,12 +91,16 @@ export function CartDrawer({
   const [combosAdded, setCombosAdded] = useState<Record<string, number>>({})
   const [comboDismissedAt, setComboDismissedAt] = useState<Record<string, number>>({})
   const [comboSelectedDrinks, setComboSelectedDrinks] = useState<Record<string, string>>({})
+  const [papasAdded, setPapasAdded] = useState<Record<string, number>>({})
+  const [papasDismissedAt, setPapasDismissedAt] = useState<Record<string, number>>({})
+
+  const papasExtra = extrasData[0]
 
   const PHONE_REGEX = /^09\d[\s]?\d{3}[\s]?\d{3}$/
 
   const discount = deliveryMethod === "pickup" ? Math.round(total * TAKEAWAY_DISCOUNT) : 0
   const finalTotal = total - discount
-  const isEmpty = items.length === 0 && cartDrinks.length === 0
+  const isEmpty = items.length === 0 && cartDrinks.length === 0 && cartExtras.length === 0
 
   const takeawaySavings = Math.round(total * TAKEAWAY_DISCOUNT)
 
@@ -102,10 +122,14 @@ export function CartDrawer({
     const orderData: OrderData = {
       items,
       drinks: cartDrinks,
+      extras: cartExtras,
       total: finalTotal,
       discount,
       deliveryMethod,
-      ...form,
+      customerName: form.customerName,
+      phone: form.phone,
+      address: form.address,
+      notes: form.notes,
     }
 
     const message = buildWhatsAppMessage(orderData)
@@ -174,6 +198,10 @@ export function CartDrawer({
                             const comboDrink = drinks.find((d) => d.id === selectedDrinkId) ?? drinks[0]
                             const showComboPrompt = addedCount < item.quantity && dismissedAt !== item.quantity
 
+                            const papasCount = papasAdded[key] ?? 0
+                            const papasDismAt = papasDismissedAt[key] ?? -1
+                            const showPapasPrompt = papasExtra != null && papasCount < item.quantity && papasDismAt !== item.quantity
+
                             return (
                               <div key={key}>
                                 {/* Burger card */}
@@ -200,11 +228,11 @@ export function CartDrawer({
                                     <button onClick={() => onRemoveItem(item.burger.id, item.size)} className="text-white/20 hover:text-red-400 transition-colors">
                                       <Trash2 size={14} />
                                     </button>
-                                    <span className="text-white font-black text-sm">${item.burger.prices[item.size] * item.quantity}</span>
+                                    <span className="text-white font-black text-sm">${getPrice(item.burger, item.size) * item.quantity}</span>
                                   </div>
                                 </div>
 
-                                {/* Combo — agregado */}
+                                {/* Combo bebida — agregado */}
                                 {addedCount > 0 && (
                                   <motion.div
                                     initial={{ opacity: 0, y: -4 }}
@@ -220,7 +248,7 @@ export function CartDrawer({
                                   </motion.div>
                                 )}
 
-                                {/* Combo — pending */}
+                                {/* Combo bebida — pending */}
                                 {showComboPrompt && (
                                   <div className="border border-t-0 border-white/8 bg-white/[0.02] p-3">
                                     <div className="flex items-center gap-2 mb-2">
@@ -261,6 +289,52 @@ export function CartDrawer({
                                       >
                                         No gracias
                                       </button>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Combo papas — agregadas */}
+                                {papasCount > 0 && (
+                                  <motion.div
+                                    initial={{ opacity: 0, y: -4 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.25 }}
+                                    className="border border-t-0 border-green-500/30 bg-green-500/5 px-4 py-2 flex items-center gap-2"
+                                  >
+                                    <Check size={11} className="text-green-400 shrink-0" />
+                                    <span className="text-green-400 text-[11px] font-black uppercase tracking-wider">
+                                      {papasCount > 1 ? `Papas extra ×${papasCount}` : "Papas extra agregadas"}
+                                    </span>
+                                    <span className="text-white/40 text-[11px]">— ${papasExtra?.price} c/u</span>
+                                  </motion.div>
+                                )}
+
+                                {/* Combo papas — pending */}
+                                {showPapasPrompt && papasExtra && (
+                                  <div className="border border-t-0 border-white/8 bg-white/[0.02] p-3">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-sm">🍟</span>
+                                        <p className="text-white/70 text-[11px] font-black uppercase tracking-widest">¿Papas extra?</p>
+                                        <p className="text-white/40 text-[10px]">+${papasExtra.price}</p>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <button
+                                          onClick={() => {
+                                            onAddExtra(papasExtra)
+                                            setPapasAdded((prev) => ({ ...prev, [key]: (prev[key] ?? 0) + 1 }))
+                                          }}
+                                          className="text-[10px] font-black border border-white/20 text-white/70 hover:border-white hover:text-white px-3 py-1.5 transition-all uppercase tracking-wider"
+                                        >
+                                          + Agregar
+                                        </button>
+                                        <button
+                                          onClick={() => setPapasDismissedAt((prev) => ({ ...prev, [key]: item.quantity }))}
+                                          className="text-[10px] text-white/25 hover:text-white/40 transition-colors"
+                                        >
+                                          No gracias
+                                        </button>
+                                      </div>
                                     </div>
                                   </div>
                                 )}
@@ -384,13 +458,19 @@ export function CartDrawer({
                     {items.map((item) => (
                       <div key={`${item.burger.id}-${item.size}`} className="flex justify-between text-sm">
                         <span className="text-white/60">{item.quantity}x {item.burger.name} {SIZE_LABEL[item.size]}</span>
-                        <span className="text-white">${item.burger.prices[item.size] * item.quantity}</span>
+                        <span className="text-white">${getPrice(item.burger, item.size) * item.quantity}</span>
                       </div>
                     ))}
                     {cartDrinks.map((d) => (
                       <div key={d.drink.id} className="flex justify-between text-sm">
                         <span className="text-white/60">{d.quantity}x {d.drink.name}</span>
                         <span className="text-white">${d.drink.price * d.quantity}</span>
+                      </div>
+                    ))}
+                    {cartExtras.map((e) => (
+                      <div key={e.extra.id} className="flex justify-between text-sm">
+                        <span className="text-white/60">{e.quantity}x {e.extra.name}</span>
+                        <span className="text-white">${e.extra.price * e.quantity}</span>
                       </div>
                     ))}
                     {discount > 0 && (
